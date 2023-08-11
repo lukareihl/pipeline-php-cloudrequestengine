@@ -23,141 +23,156 @@
 
 namespace fiftyone\pipeline\cloudrequestengine\tests;
 
-require(__DIR__ . "/../vendor/autoload.php");
-
 use fiftyone\pipeline\cloudrequestengine\CloudRequestEngine;
-use fiftyone\pipeline\core\PipelineBuilder;
-use fiftyone\pipeline\cloudrequestengine\HttpClient;
 use fiftyone\pipeline\cloudrequestengine\Constants;
-use fiftyone\pipeline\cloudrequestengine\tests\CloudRequestEngineTestsBase;
+use fiftyone\pipeline\core\PipelineBuilder;
 
-use PHPUnit\Framework\TestCase;
-
-class CloudRequestEngineTests extends CloudRequestEngineTestsBase {
-    const testEndPoint="http://testEndPoint/";
-    const testEnvVarEndPoint="http://testEnvVarEndPoint/";
-
-    /**
-     * @after
-     */
-    protected function tearDowniCloudEndPoint() {
-        $this->assertTrue(putenv(Constants::FOD_CLOUD_API_URL));
-    }
+class CloudRequestEngineTests extends CloudRequestEngineTestsBase
+{
+    public const testEndPoint = 'http://testEndPoint/';
+    public const testEnvVarEndPoint = 'http://testEnvVarEndPoint/';
 
     /**
      * Test the explicit setting of cloudEndPoint via constructor take
      * precedence over environment variable settings.
      */
-    public function testConfigPrecedenceExplicitSettings() {
-
+    public function testConfigPrecedenceExplicitSettings()
+    {
         $httpClient = $this->mockHttp();
-        
+
         $this->assertTrue(putenv(Constants::FOD_CLOUD_API_URL .
-            "=" .
+            '=' .
             CloudRequestEngineTests::testEnvVarEndPoint));
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient,
-            "cloudEndPoint" => CloudRequestEngineTests::testEndPoint));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient,
+            'cloudEndPoint' => CloudRequestEngineTests::testEndPoint
+        ]);
 
-        $this->assertEquals(
+        $this->assertSame(
             CloudRequestEngineTests::testEndPoint,
-            $engine->baseURL);
+            $engine->baseURL
+        );
     }
 
     /**
-     * Test the environment variable settings of cloud endpoint take 
+     * Test the environment variable settings of cloud endpoint take
      * precedence over the default value.
      */
-    public function testConfigPrecedenceEnvironmentVariableSettings() {
-
+    public function testConfigPrecedenceEnvironmentVariableSettings()
+    {
         $httpClient = $this->mockHttp();
-        
+
         $this->assertTrue(putenv(
             Constants::FOD_CLOUD_API_URL .
-            "=" .
-            CloudRequestEngineTests::testEnvVarEndPoint));
+            '=' .
+            CloudRequestEngineTests::testEnvVarEndPoint
+        ));
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient
+        ]);
 
-        $this->assertEquals(
-            CloudRequestEngineTests::testEnvVarEndPoint,
-            $engine->baseURL);
+        $this->assertSame(CloudRequestEngineTests::testEnvVarEndPoint, $engine->baseURL);
     }
 
     /**
      * Test that the default end point is used if no other methods is used.
      */
-    public function testConfigPrecedenceDefaultSettings() {
-
+    public function testConfigPrecedenceDefaultSettings()
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient
+        ]);
 
-        $this->assertEquals(
-            Constants::BASE_URL_DEFAULT,
-            $engine->baseURL);
+        $this->assertSame(Constants::BASE_URL_DEFAULT, $engine->baseURL);
     }
 
     /**
-     * Test that base URL is appended with slash if does not end with one
+     * Test that base URL is appended with slash if does not end with one.
      */
-    public function testBaseUrlNoSlash() {
-
+    public function testBaseUrlNoSlash()
+    {
         $httpClient = $this->mockHttp();
 
-        $testNoSlashUrl = "http://localhost";
+        $testNoSlashUrl = 'http://localhost';
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient,
-            "cloudEndPoint" => $testNoSlashUrl));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient,
+            'cloudEndPoint' => $testNoSlashUrl
+        ]);
 
-        $this->assertEquals(
-            $testNoSlashUrl . "/",
-            $engine->baseURL);
+        $this->assertSame($testNoSlashUrl . '/', $engine->baseURL);
     }
 
     // Data Provider for testGetSelectedEvidence
-	public static function provider_testGetSelectedEvidence()
+    public static function provider_testGetSelectedEvidence()
     {
-        return array(
-        array(array("query.User-Agent"=>"iPhone", "header.User-Agent"=>"iPhone"), "query",  array("query.User-Agent" =>"iPhone")),
-        array(array("header.User-Agent"=>"iPhone", "a.User-Agent"=>"iPhone", "z.User-Agent"=>"iPhone"), "other",  array("z.User-Agent"=>"iPhone", "a.User-Agent"=>"iPhone"))
-        );
+        return [
+            [
+                ['query.User-Agent' => 'iPhone', 'header.User-Agent' => 'iPhone'],
+                'query',
+                ['query.User-Agent' => 'iPhone']
+            ],
+            [
+                ['header.User-Agent' => 'iPhone', 'a.User-Agent' => 'iPhone', 'z.User-Agent' => 'iPhone'],
+                'other',
+                ['z.User-Agent' => 'iPhone', 'a.User-Agent' => 'iPhone']
+            ]
+        ];
     }
 
     /**
      * Test evidence of specific type is returned from all
      * the evidence passed, if type is not from query, header
-     * or cookie then evidences are returned sorted in descending order
+     * or cookie then evidences are returned sorted in descending order.
      * @dataProvider provider_testGetSelectedEvidence
      */
-    public function testGetSelectedEvidence($evidence, $type, $expectedValue) {
-
+    public function testGetSelectedEvidence($evidence, $type, $expectedValue)
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient
+        ]);
 
         $result = $engine->getSelectedEvidence($evidence, $type);
-        $this->assertEquals($expectedValue, $result);
+        $this->assertSame($expectedValue, $result);
     }
 
     // Data Provider for testGetContent_nowarning
-	public static function provider_testGetContent_nowarning()
+    public static function provider_testGetContent_nowarning()
     {
-        return array(
-            array(array("query.User-Agent" => "query-iPhone", "header.user-agent" => "header-iPhone"), "query-iPhone"),
-            array(array("query.User-Agent" => "query-iPhone", "cookie.User-Agent" => "cookie-iPhone"), "query-iPhone"),
-            array(array("query.User-Agent" => "query-iPhone", "a.User-Agent" => "a-iPhone"), "query-iPhone")
-        );
+        return [
+            [
+                [
+                    'query.User-Agent' => 'query-iPhone',
+                    'header.user-agent' => 'header-iPhone'
+                ],
+                'query-iPhone'
+            ],
+            [
+                [
+                    'query.User-Agent' => 'query-iPhone',
+                    'cookie.User-Agent' => 'cookie-iPhone'
+                ],
+                'query-iPhone'
+            ],
+            [
+                [
+                    'query.User-Agent' => 'query-iPhone',
+                    'a.User-Agent' => 'a-iPhone'
+                ],
+                'query-iPhone'
+            ]
+        ];
     }
 
     /**
@@ -166,13 +181,14 @@ class CloudRequestEngineTests extends CloudRequestEngineTestsBase {
      * evidence overwrite other evidences without any warning logged.
      * @dataProvider provider_testGetContent_nowarning
      */
-    public function testGetContent_nowarning($evidence, $expectedValue) {
-
+    public function testGetContent_nowarning($evidence, $expectedValue)
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient
+        ]);
 
         $pipeline = new PipelineBuilder();
 
@@ -180,38 +196,59 @@ class CloudRequestEngineTests extends CloudRequestEngineTestsBase {
 
         $data = $pipeline->createFlowData();
 
-        foreach($evidence as $key => $value){
+        foreach ($evidence as $key => $value) {
             $data->evidence->set($key, $value);
         }
-        
+
         $result = $engine->getContent($data);
-        $this->assertEquals($expectedValue, $result["user-agent"]);
+        $this->assertEquals($expectedValue, $result['user-agent']);
     }
 
     // Data Provider for testGetContent_warnings
-	public static function provider_testGetContent_warnings()
+    public static function provider_testGetContent_warnings()
     {
-        return array(
-            array(array("header.User-Agent" => "header-iPhone", "cookie.User-Agent" => "cookie-iPhone"), "header-iPhone"),
-            array(array("a.User-Agent" => "a-iPhone", "b.User-Agent" => "b-iPhone", "z.User-Agent" => "z-iPhone"), "a-iPhone"),
-            array(array("query.User-Agent" => "query-iPhone","header.User-Agent" => "header-iPhone", "cookie.User-Agent" => "cookie-iPhone", "a.User-Agent" => "a-iPhone"), "query-iPhone")
-        );
+        return [
+            [
+                [
+                    'header.User-Agent' => 'header-iPhone',
+                    'cookie.User-Agent' => 'cookie-iPhone'
+                ],
+                'header-iPhone'
+            ],
+            [
+                [
+                    'a.User-Agent' => 'a-iPhone',
+                    'b.User-Agent' => 'b-iPhone',
+                    'z.User-Agent' => 'z-iPhone'
+                ],
+                'a-iPhone'
+            ],
+            [
+                [
+                    'query.User-Agent' => 'query-iPhone',
+                    'header.User-Agent' => 'header-iPhone',
+                    'cookie.User-Agent' => 'cookie-iPhone',
+                    'a.User-Agent' => 'a-iPhone'
+                ],
+                'query-iPhone'
+            ]
+        ];
     }
 
     /**
      * Test Content to send in the POST request is generated as
      * per the precedence rule of The evidence keys. These are
-     * added to the evidence in reverse order, if there is conflict then 
+     * added to the evidence in reverse order, if there is conflict then
      * the queryData value is overwritten and warnings are logged.
      * @dataProvider provider_testGetContent_warnings
      */
-    public function testGetContent_warnings($evidence, $expectedValue) {
-
+    public function testGetContent_warnings($evidence, $expectedValue)
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient]);
 
         $pipeline = new PipelineBuilder();
 
@@ -219,42 +256,55 @@ class CloudRequestEngineTests extends CloudRequestEngineTestsBase {
 
         $data = $pipeline->createFlowData();
 
-        foreach($evidence as $key => $value){
+        foreach ($evidence as $key => $value) {
             $data->evidence->set($key, $value);
         }
-        
-        $this->assertEquals($expectedValue, @$engine->getContent($data)["user-agent"]);
-        
+
+        $this->assertEquals($expectedValue, @$engine->getContent($data)['user-agent']);
+
         try {
             $engine->getContent($data);
         } catch (\Exception $e) {
-            $this->assertTrue(strpos($e->getMessage(), "evidence conflicts with") !== false);
+            $this->assertStringContainsString('evidence conflicts with', $e->getMessage());
         }
     }
 
     // Data Provider for testGetContent_case_insensitive
-	public static function provider_testGetContent_case_insensitive()
+    public static function provider_testGetContent_case_insensitive()
     {
-        return array(
-            array(array("query.User-Agent" => "iPhone1", "Query.user-agent" => "iPhone2"), "iPhone2"),
-            array(array("a.User-Agent" => "iPhone1", "A.user-agent" => "iPhone2"), "iPhone2")
-        );
+        return [
+            [
+                [
+                    'query.User-Agent' => 'iPhone1',
+                    'Query.user-agent' => 'iPhone2'
+                ],
+                'iPhone2'
+            ],
+            [
+                [
+                    'a.User-Agent' => 'iPhone1',
+                    'A.user-agent' => 'iPhone2'
+                ],
+                'iPhone2'
+            ]
+        ];
     }
 
     /**
      * Test Content to send in the POST request is generated as
-     * per the precedence rule of The evidence keys. Verify that 
-     * comparison is case insensitive and evidence values will
+     * per the precedence rule of The evidence keys. Verify that
+     * comparison is case-insensitive and evidence values will be
      * overwritten without any warning logged.
      * @dataProvider provider_testGetContent_case_insensitive
      */
-    public function testGetContent_case_insensitive($evidence, $expectedValue) {
-
+    public function testGetContent_case_insensitive($evidence, $expectedValue)
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudRequestEngineTests::resourceKey,
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => self::resourceKey,
+            'httpClient' => $httpClient
+        ]);
 
         $pipeline = new PipelineBuilder();
 
@@ -262,13 +312,19 @@ class CloudRequestEngineTests extends CloudRequestEngineTestsBase {
 
         $data = $pipeline->createFlowData();
 
-        foreach($evidence as $key => $value){
+        foreach ($evidence as $key => $value) {
             $data->evidence->set($key, $value);
         }
-        
+
         $result = $engine->getContent($data);
-        $this->assertEquals($expectedValue, $result["user-agent"]);
+        $this->assertEquals($expectedValue, $result['user-agent']);
     }
 
+    /**
+     * @after
+     */
+    protected function tearDowniCloudEndPoint()
+    {
+        $this->assertTrue(putenv(Constants::FOD_CLOUD_API_URL));
+    }
 }
-

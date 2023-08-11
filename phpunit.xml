@@ -1,4 +1,4 @@
-<phpunit>
+<phpunit bootstrap="vendor/autoload.php">
   <php>
     <env name="RESOURCEKEY" value="!!YOUR_RESOURCE_KEY!!"/>
   </php>

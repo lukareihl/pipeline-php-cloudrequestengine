@@ -23,131 +23,120 @@
 
 namespace fiftyone\pipeline\cloudrequestengine\tests;
 
-require(__DIR__ . "/../vendor/autoload.php");
-require_once(__DIR__ . "/CloudRequestEngineTestsBase.php");
-
 use fiftyone\pipeline\cloudrequestengine\CloudRequestEngine;
 use fiftyone\pipeline\cloudrequestengine\CloudRequestException;
 use fiftyone\pipeline\core\PipelineBuilder;
-use fiftyone\pipeline\cloudrequestengine\HttpClient;
 
-use PHPUnit\Framework\TestCase;
-
-class CloudResponse extends CloudRequestEngineTestsBase {
+class CloudResponse extends CloudRequestEngineTestsBase
+{
     /**
      * Test cloud request engine adds correct information to post request
-     * and returns the response in the ElementData
+     * and returns the response in the ElementData.
      */
-    public function testProcess() {
-
+    public function testProcess()
+    {
         $httpClient = $this->mockHttp();
-        
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => CloudResponse::resourceKey,
-            "httpClient" => $httpClient));
 
-        $builder= new PipelineBuilder();
-        $pipeline = $builder
-            ->add($engine)
-            ->build();
+        $engine = new CloudRequestEngine([
+            'resourceKey' => CloudResponse::resourceKey,
+            'httpClient' => $httpClient
+        ]);
+
+        $pipeline = (new PipelineBuilder())->add($engine)->build();
         $data = $pipeline->createFlowData();
-        $data->evidence->set("query.User-Agent", CloudResponse::userAgent);
+        $data->evidence->set('query.User-Agent', CloudResponse::userAgent);
 
         $data->process();
 
         $result = $data->getFromElement($engine)->cloud;
-        $this->assertEquals(CloudResponse::jsonResponse, $result);
+        $this->assertSame(CloudResponse::jsonResponse, $result);
 
-        $jsonObj = \json_decode($result, true);
-        $this->assertEquals(1, $jsonObj["device"]["value"]);
+        $jsonObj = json_decode($result, true);
+        $this->assertEquals(1, $jsonObj['device']['value']);
     }
-    
+
     /**
      * Verify that the CloudRequestEngine can correctly parse a
      * response from the accessible properties endpoint that contains
      * meta-data for sub-properties.
      */
-    public function testSubProperties() {
-        
+    public function testSubProperties()
+    {
         $httpClient = $this->mockHttp();
 
-        $engine = new CloudRequestEngine(array(
-            "resourceKey" => "subpropertieskey",
-            "httpClient" => $httpClient));
+        $engine = new CloudRequestEngine([
+            'resourceKey' => 'subpropertieskey',
+            'httpClient' => $httpClient
+        ]);
 
-        $this->assertEquals(2, count($engine->flowElementProperties));
-       
-        $deviceProperties = $engine->flowElementProperties["device"];
-        $this->assertEquals(2, count($deviceProperties));
-        $this->assertTrue($this->propertiesContainName($deviceProperties, "IsMobile"));
-        $this->assertTrue($this->propertiesContainName($deviceProperties, "IsTablet"));
-        $devicesProperties = $engine->flowElementProperties["devices"];
-        $this->assertEquals(1, count($devicesProperties));
-        $this->assertTrue(isset($devicesProperties["devices"]));
-        $this->assertTrue($this->propertiesContainName($devicesProperties["devices"]["itemproperties"], "IsMobile"));
-        $this->assertTrue($this->propertiesContainName($devicesProperties["devices"]["itemproperties"], "IsTablet"));
+        $this->assertCount(2, $engine->flowElementProperties);
+
+        $deviceProperties = $engine->flowElementProperties['device'];
+        $this->assertCount(2, $deviceProperties);
+        $this->assertTrue($this->propertiesContainName($deviceProperties, 'IsMobile'));
+        $this->assertTrue($this->propertiesContainName($deviceProperties, 'IsTablet'));
+        $devicesProperties = $engine->flowElementProperties['devices'];
+        $this->assertCount(1, $devicesProperties);
+        $this->assertTrue(isset($devicesProperties['devices']));
+        $this->assertTrue($this->propertiesContainName($devicesProperties['devices']['itemproperties'], 'IsMobile'));
+        $this->assertTrue($this->propertiesContainName($devicesProperties['devices']['itemproperties'], 'IsTablet'));
     }
 
-    
-    /** 
-     * Test cloud request engine handles errors from the cloud service 
+    /**
+     * Test cloud request engine handles errors from the cloud service
      * as expected.
      * An exception should be thrown by the cloud request engine
      * containing the errors from the cloud service
-     * and the pipeline is configured to throw any exceptions up 
+     * and the pipeline is configured to throw any exceptions up
      * the stack.
-     * We also check that the exception message includes the content 
+     * We also check that the exception message includes the content
      * from the JSON response.
-     */ 
-    public function testValidateErrorHandlingInvalidResourceKey() {
-
+     */
+    public function testValidateErrorHandlingInvalidResourceKey()
+    {
         $httpClient = $this->mockHttp();
 
         $exception = null;
 
         try {
-            $engine = new CloudRequestEngine(array(
-                "resourceKey" => CloudResponse::invalidKey,
-                "httpClient" => $httpClient
-            ));
-        }
-        catch (CloudRequestException $ex) {
+            $engine = new CloudRequestEngine([
+                'resourceKey' => CloudResponse::invalidKey,
+                'httpClient' => $httpClient
+            ]);
+        } catch (CloudRequestException $ex) {
             $exception = $ex;
         }
 
-        $this->assertNotNull("Expected exception to occur", $exception);
-        $this->assertTrue(
-            strpos($exception->getMessage(), CloudResponse::invalidKeyMessage)
-            != false);
+        $this->assertNotNull('Expected exception to occur', $exception);
+        $this->assertStringContainsString(CloudResponse::invalidKeyMessage, $exception->getMessage());
     }
 
-    /** 
+    /**
      * Test cloud request engine handles a lack of data from the
      * cloud service as expected.
      * An exception should be thrown by the cloud request engine
      * containing the errors from the cloud service
-     * and the pipeline is configured to throw any exceptions up 
+     * and the pipeline is configured to throw any exceptions up
      * the stack.
-     * We also check that the exception message includes the content 
+     * We also check that the exception message includes the content
      * from the JSON response.
-     */ 
-    public function testValidateErrorHandlingNoData() {
-
+     */
+    public function testValidateErrorHandlingNoData()
+    {
         $httpClient = $this->mockHttp();
 
         $exception = null;
 
         try {
-            $engine = new CloudRequestEngine(array(
-                "resourceKey" => CloudResponse::noDataKey,
-                "httpClient" => $httpClient
-            ));
-        }
-        catch (CloudRequestException $ex) {
+            $engine = new CloudRequestEngine([
+                'resourceKey' => CloudResponse::noDataKey,
+                'httpClient' => $httpClient
+            ]);
+        } catch (CloudRequestException $ex) {
             $exception = $ex;
         }
 
-        $this->assertNotNull("Expected exception to occur", $exception);
-        $this->assertEquals($exception->getMessage(), CloudResponse::noDataKeyMessageComplete);
+        $this->assertNotNull('Expected exception to occur', $exception);
+        $this->assertSame($exception->getMessage(), CloudResponse::noDataKeyMessageComplete);
     }
 }
