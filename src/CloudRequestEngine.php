@@ -66,7 +66,7 @@ class CloudRequestEngine extends Engine
     private $httpClient;
 
     /**
-     * @var array
+     * @var array<mixed>
      */
     private $evidenceKeys;
 
@@ -278,7 +278,7 @@ class CloudRequestEngine extends Engine
     /**
      * Internal function for getting evidence keys used by cloud engines.
      *
-     * @return array
+     * @return array<mixed>
      */
     private function getEvidenceKeys()
     {
