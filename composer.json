@@ -23,8 +23,8 @@
     "license": "EUPL-1.2", 
     "type": "library",
     "require": {
-        "51degrees/fiftyone.pipeline.engines": "4.*",
-        "51degrees/fiftyone.pipeline.core": "4.*"
+        "51degrees/fiftyone.pipeline.engines": "1.*",
+        "51degrees/fiftyone.pipeline.core": "1.*"
     },
     "require-dev": {
         "phpunit/phpunit": "*"
@@ -38,5 +38,19 @@
         "psr-4": {
             "fiftyone\\pipeline\\cloudrequestengine\\tests\\": "tests/"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/lukareihl/pipeline-php-core"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/lukareihl/pipeline-php-engines"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/lukareihl/javascript-templates"
+        }
+    ]
 }
